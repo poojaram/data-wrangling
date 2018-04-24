@@ -90,37 +90,87 @@ print(paste("Female binging increased & male binging decreased in ",
             collapse = NULL))
 
 # State with the largest median increase in male binge drinking
-median_states_grouped <- group_by(county_drinking, state) %>% 
-  summarise(male_median_2012 = median(males_2012), male_median_2002 = median(males_2002)) %>%
-  mutate(male_median_increase = (male_median_2012 - male_median_2002)) %>%
-  filter(male_median_increase == max(male_median_increase)) %>%
-  select(state, male_median_increase)
-print(median_states_grouped)
+largest_median_male_increase <- county_drinking %>% 
+  group_by(state) %>% summarize(median = median(males_diff)) %>%
+  filter(median == max(median))
+print(largest_median_male_increase)
 
 #States with the largest median increase in female binge drinking
-median_states_grouped <- group_by(female_increase_male_decrease, state) %>% 
-  summarise(female_median_2012 = median(females_2012), female_median_2002 = median(females_2002)) %>%
-  mutate(female_median_increase = (female_median_2012 - female_median_2002)) %>%
-  filter(female_median_increase == max(female_median_increase)) %>%
-  select(state, female_median_increase)
-print(median_states_grouped)
+largest_median_female_increase <- county_drinking %>% 
+  filter(females_2002 < females_2012, males_2002 > males_2012) %>%
+  group_by(state) %>% summarize(median_females = median(females_diff), median_both_sexes = median(both_sexes_diff)) %>% 
+  filter(median_females == max(median_females))
+print(largest_median_female_increase)
 
 #################
 #### PART 3 #####
 #################
 
+# adds the "binge_" to column names in binge.drinking
+colnames(binge_drinking)[3:35] <- paste0("binge_", colnames(binge_drinking)[3:35])
+# adds the "any_" to column names in alc.consumption
+colnames(alcohol_consumption)[3:35] <- paste0("any_", colnames(alcohol_consumption)[3:35])
+
+# joinds the two data frame
+all_drinking <- full_join(binge_drinking, alcohol_consumption, by = c("location", "state"))
+
+# Adding a non_binge_2012 column
+all_drinking <- mutate(all_drinking, non_binge_2012 = any_both_sexes_2012 - binge_both_sexes_2012)
+
+# Prints the average rate of drinking that was not binge drinking in 2012
+filter(all_drinking, location != state, location != "United States") %>%
+  summarise(mean = mean(non_binge_2012))
+
+# Filters location and finds the minimum for non_binge_2012
+# Prints a data frame with the name of the state along with its 'any drinking' rate, 'binge drinking' rate
+# and the difference between them
+filter(all_drinking, location == state) %>%
+  filter(non_binge_2012 == min(non_binge_2012)) %>%
+  select(state, any_both_sexes_2012, binge_both_sexes_2012, non_binge_2012)
+
+# Filters based on county-level, state with the smallest amount of non-binge drinking
+# Prints a data frame with the name of the state along with its 'any drinking' rate, 'binge drinking' rate
+# and the difference between them
 
 
 
+# State that was binge drinking the largest percentage of all drinking
 
 
+# Challenge Problem
+# This function writes a new data frame to csv file 
+# It takes in state and year as parameters and return data frame of drinking in that state during that year
+ExportStateYear <- function(input_state, input_year) {
+  input_year <- toString(input_year)
+  filter(all_drinking, state == input_state) %>%
+    select(location, state, contains(input_year)) %>%
+    arrange_(paste0("any_both_sexes_", input_year)) %>%
+    write.csv(file = paste0("data/drinking_", input_state, input_year,".csv"))
+}
+ExportStateYear("Washington", 2011)
+ExportStateYear("Florida", 2007)
 
 #################
 #### PART 4 #####
 #################
 
-# Your script for Part 4 goes here (and delete this comment!)
+# This function taken in state, gender, year and type of drinking data as inputs and returns
+# the exact data for year, state and type of drinking
+# Creates the search term by pasting the type and year as string together, and then it
+# filters the state and removes the counties, and selects the final required data.
 
+ExportSpecifics <- function(input_state, input_sex, input_year, input_type) {
+  input_year <- toString(input_year)
+  term <- paste0(input_sex, "_", input_year)
+  check_for <- paste0(input_type,"_",term) 
+  data_to_return <- filter(all_drinking, input_state == state, input_state == location) %>%  
+  select(state, check_for) 
+  data_to_return
+}
 
+run1 <- ExportSpecifics("New York", "males", 2007, "binge")
+print(run1)
 
+run2 <- ExportSpecifics("Virginia", "females", 2005, "any")
+print(run2)
 
