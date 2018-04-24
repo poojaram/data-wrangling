@@ -132,21 +132,25 @@ filter(all_drinking, location == state) %>%
 # Prints a data frame with the name of the state along with its 'any drinking' rate, 'binge drinking' rate
 # and the difference between them
 sub_frame <- filter(all_drinking, state != location, state != "National") %>%
-  group_by(state) %>% summarise(any_both_sexes_2012 = round(mean(any_both_sexes_2012), 1),
-                                binge_both_sexes_2012 = round(mean(binge_both_sexes_2012), 1), 
+  group_by(state) %>% summarise(any_drinking = round(mean(any_both_sexes_2012), 1),
+                                binge_drinking = round(mean(binge_both_sexes_2012), 1), 
                                 non_binge_2012 = round(mean(non_binge_2012), 1))
-                                
+
 smallest_state <- filter(sub_frame, sub_frame$non_binge_2012 == min(sub_frame$non_binge_2012)) %>% 
   print()
 
 # State that was binge drinking the largest percentage of all drinking
-filter(all_drinking, state == location) %>%
+sub_frame2 <- filter(all_drinking, state == location) %>%
   group_by(state) %>%
   summarize(any_drinking = any_both_sexes_2012,
             binge_drinking = binge_both_sexes_2012,
-            not_binge_2012 = any_both_sexes_2012 - binge_both_sexes_2012) %>%
-  filter(not_binge_2012 == max(not_binge_2012)) %>%
-  print()
+            not_binge_2012 = any_both_sexes_2012 - binge_both_sexes_2012)
+
+largest_state <- mutate(sub_frame2, large_percentage = (binge_drinking/any_drinking)*100 ) %>%
+  filter(large_percentage == max(large_percentage))
+
+print(paste("The state with the largest binge drinking percentage of all drinking is", largest_state$state,
+               " with the percentage of ", round(largest_state$large_percentage), "%.", sep = "", collapse = NULL))
 
 # Challenge Problem
 # This function writes a new data frame to csv file 
