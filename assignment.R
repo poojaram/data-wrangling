@@ -174,7 +174,7 @@ ExportStateYear("Florida", 2007)
 # Creates the search term by pasting the type and year as string together, and then it
 # filters the state and removes the counties, and selects the final required data.
 
-ExportSpecifics <- function(input_state, input_sex, input_year, input_type) {
+GiveSpecifics <- function(input_state, input_sex, input_year, input_type) {
   input_year <- toString(input_year)
   term <- paste0(input_sex, "_", input_year)
   check_for <- paste0(input_type,"_",term) 
@@ -183,10 +183,10 @@ ExportSpecifics <- function(input_state, input_sex, input_year, input_type) {
   data_to_return
 }
 
-run1 <- ExportSpecifics("New York", "males", 2007, "binge")
+run1 <- GiveSpecifics("New York", "males", 2007, "binge")
 print(run1)
 
-run2 <- ExportSpecifics("Virginia", "females", 2005, "any")
+run2 <- GiveSpecifics("Virginia", "females", 2005, "any")
 print(run2)
 
 
