@@ -131,11 +131,22 @@ filter(all_drinking, location == state) %>%
 # Filters based on county-level, state with the smallest amount of non-binge drinking
 # Prints a data frame with the name of the state along with its 'any drinking' rate, 'binge drinking' rate
 # and the difference between them
-
-
+sub_frame <- filter(all_drinking, state != location, state != "National") %>%
+  group_by(state) %>% summarise(any_both_sexes_2012 = round(mean(any_both_sexes_2012), 1),
+                                binge_both_sexes_2012 = round(mean(binge_both_sexes_2012), 1), 
+                                non_binge_2012 = round(mean(non_binge_2012), 1))
+                                
+smallest_state <- filter(sub_frame, sub_frame$non_binge_2012 == min(sub_frame$non_binge_2012)) %>% 
+  print()
 
 # State that was binge drinking the largest percentage of all drinking
-
+filter(all_drinking, state == location) %>%
+  group_by(state) %>%
+  summarize(any_drinking = any_both_sexes_2012,
+            binge_drinking = binge_both_sexes_2012,
+            not_binge_2012 = any_both_sexes_2012 - binge_both_sexes_2012) %>%
+  filter(not_binge_2012 == max(not_binge_2012)) %>%
+  print()
 
 # Challenge Problem
 # This function writes a new data frame to csv file 
@@ -164,7 +175,7 @@ ExportSpecifics <- function(input_state, input_sex, input_year, input_type) {
   term <- paste0(input_sex, "_", input_year)
   check_for <- paste0(input_type,"_",term) 
   data_to_return <- filter(all_drinking, input_state == state, input_state == location) %>%  
-  select(state, check_for) 
+    select(state, check_for) 
   data_to_return
 }
 
@@ -173,4 +184,5 @@ print(run1)
 
 run2 <- ExportSpecifics("Virginia", "females", 2005, "any")
 print(run2)
+
 
